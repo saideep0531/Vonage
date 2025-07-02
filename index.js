@@ -14,21 +14,19 @@ const vonage = new Vonage({
 
 app.post('/notify', async (req, res) => {
   const { phoneNumber, message } = req.body;
-
   try {
-    const smsResult = await vonage.sms.send({
-      to: phoneNumber,
-      from: process.env.VONAGE_FROM_NUMBER,
-      text: message,
-    });
-
-    console.log("✅ SMS sent:", smsResult);
-
-    await appendToSheet({ phoneNumber, message });
-    res.json({ success: true, data: smsResult });
-  } catch (error) {
-    console.error("❌ Error:", error);
-    res.status(500).json({ success: false, error: error.message });
+    vonage.sms.send({ to: phoneNumber, from: process.env.VONAGE_FROM_NUMBER, text: message })
+      .then(response => {
+        console.log("📩 SMS sent:", response);
+        appendToSheet(phoneNumber, message);
+        res.status(200).json({ success: true, data: response });
+      })
+      .catch(error => {
+        console.error("❌ SMS failed:", error);
+        res.status(500).json({ success: false, error: error.message });
+      });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
