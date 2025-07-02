@@ -1,24 +1,28 @@
 const { GoogleSpreadsheet } = require('google-spreadsheet');
-const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID);
+const creds = require('./gcreds.json');
 
-async function appendToSheet({ phoneNumber, message }) {
-  await doc.useServiceAccountAuth({
-    client_email: process.env.GOOGLE_CLIENT_EMAIL,
-    private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-  });
+const appendToSheet = async (phone, message) => {
+  try {
+    const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID);
+    await doc.useServiceAccountAuth(creds);
+    await doc.loadInfo();
 
-  await doc.loadInfo();
-  const sheet = doc.sheetsByIndex[0];
-  await sheet.addRow({
-    "Phone Number": phoneNumber,
-    "Message": message,
-    "Time": new Date().toLocaleString(),
-    "Assistant Name": "Saideep",
-    "Call Duration": "N/A",
-    "Transcription Summary": "N/A"
-  });
+    const sheet = doc.sheetsByIndex[0];
+    const now = new Date().toLocaleString();
 
-  console.log("✅ Logged to Google Sheet");
-}
+    await sheet.addRow({
+      "Phone Number": phone,
+      "Message": message,
+      "Time": now,
+      "Assistant Name": "Saideep Guddla",
+      "Call Duration": "N/A",
+      "Transcription Summary": "N/A"
+    });
+
+    console.log("📄 Sheet updated");
+  } catch (err) {
+    console.error("❌ Sheet update failed:", err.message);
+  }
+};
 
 module.exports = appendToSheet;
