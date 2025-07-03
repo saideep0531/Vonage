@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
-const {Vonage} = require('@vonage/server-sdk');
 const appendToSheet = require('./sheet');
+const { Vonage } = require('@vonage/server-sdk');
 
 const app = express();
 app.use(express.json());
@@ -14,29 +14,23 @@ const vonage = new Vonage({
 app.post('/notify', async (req, res) => {
   const { phoneNumber, message } = req.body;
 
-  vonage.message.sendSms(
-    process.env.VONAGE_FROM_NUMBER,
-    phoneNumber,
-    message,
-    async (err, responseData) => {
-      if (err) {
-        return res.status(500).json({ success: false, error: err });
-      }
+  try {
+    const smsResponse = await vonage.sms.send({
+      to: phoneNumber,
+      from: process.env.VONAGE_FROM_NUMBER,
+      text: message,
+    });
 
-      if (responseData.messages[0].status !== "0") {
-        return res.status(500).json({ success: false, error: "Failed to send SMS" });
-      }
-
-      try {
-        await appendToSheet(phoneNumber, message);
-        res.status(200).json({ success: true, data: responseData.messages[0] });
-      } catch (sheetError) {
-        res.status(500).json({ success: false, error: "Sheet update failed", sheetError });
-      }
-    }
-  );
+    console.log("✅ SMS Response:", smsResponse);
+    await appendToSheet(phoneNumber, message);
+    res.status(200).json({ success: true, message: "SMS sent and logged." });
+  } catch (err) {
+    console.error("❌ Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
-app.listen(3000, () => {
-  console.log('✅ Server running at http://localhost:3000');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Server running at http://localhost:${PORT}`);
 });
