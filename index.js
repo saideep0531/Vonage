@@ -31,7 +31,8 @@ app.post('/notify', async (req, res) => {
       await appendToSheet(log);
       res.json({ success: true, data: result });
     } catch (sheetErr) {
-      res.status(500).json({ success: false, error: sheetErr.message });
+      console.error("❌ Sheet logging failed:", sheetErr.message);
+      res.status(500).json({ success: false, error: "Sheet logging failed" });
     }
   });
 });
