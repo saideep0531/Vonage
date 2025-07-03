@@ -1,15 +1,20 @@
 {
-  "name": "final-sheets-sms-backend",
+  "name": "final-fixed-vonage-sheets-backend",
   "version": "1.0.0",
+  "description": "Send SMS via Vonage and log messages to Google Sheets",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "@vonage/server-sdk": "^3.2.0",
-    "body-parser": "^1.20.2",
+    "@vonage/server-sdk": "^3.4.0",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "google-spreadsheet": "^3.3.0"
-  }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "Saideep Guddla",
+  "license": "MIT"
 }
