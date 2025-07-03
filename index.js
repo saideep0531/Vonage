@@ -1,10 +1,11 @@
 require('dotenv').config();
 const express = require('express');
-const appendToSheet = require('./sheet');
+const bodyParser = require('body-parser');
 const { Vonage } = require('@vonage/server-sdk');
+const appendToSheet = require('./sheet');
 
 const app = express();
-app.use(express.json());
+app.use(bodyParser.json());
 
 const vonage = new Vonage({
   apiKey: process.env.VONAGE_API_KEY,
@@ -14,23 +15,27 @@ const vonage = new Vonage({
 app.post('/notify', async (req, res) => {
   const { phoneNumber, message } = req.body;
 
-  try {
-    const smsResponse = await vonage.sms.send({
-      to: phoneNumber,
-      from: process.env.VONAGE_FROM_NUMBER,
-      text: message,
-    });
+  vonage.sms.send({ to: phoneNumber, from: process.env.VONAGE_FROM_NUMBER, text: message }, async (err, result) => {
+    if (err || result.messages[0].status !== '0') {
+      return res.status(500).json({ success: false, error: err || result.messages[0]['error-text'] });
+    }
 
-    console.log("✅ SMS Response:", smsResponse);
-    await appendToSheet(phoneNumber, message);
-    res.status(200).json({ success: true, message: "SMS sent and logged." });
-  } catch (err) {
-    console.error("❌ Error:", err);
-    res.status(500).json({ success: false, error: err.message });
-  }
+    const log = {
+      Phone: phoneNumber,
+      Message: message,
+      Time: new Date().toLocaleString(),
+      Status: 'Success',
+    };
+
+    try {
+      await appendToSheet(log);
+      res.json({ success: true, data: result });
+    } catch (sheetErr) {
+      res.status(500).json({ success: false, error: sheetErr.message });
+    }
+  });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+app.listen(3000, () => {
+  console.log('✅ Server running at http://localhost:3000');
 });
