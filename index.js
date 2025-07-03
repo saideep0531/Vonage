@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const Vonage = require('@vonage/server-sdk');
+const {Vonage} = require('@vonage/server-sdk');
 const appendToSheet = require('./sheet');
 
 const app = express();
